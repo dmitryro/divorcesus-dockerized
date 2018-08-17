@@ -1,0 +1,49 @@
+FROM ubuntu:16.04
+
+ENV DOCKER=1 DEBIAN_FRONTEND=noninteractive
+
+# Add support for apt-* packages caching through "apt-cacher-ng"
+ARG APTPROXY
+RUN bash -c 'if [ -n "$APTPROXY" ]; then echo "Acquire::HTTP::Proxy \"http://$APTPROXY\";" > /etc/apt/apt.conf.d/01proxy; fi'
+
+## Install dependencies
+RUN apt-get update 
+RUN apt-get --no-install-recommends install -y vim-tiny 
+
+# Install latest NodeJS + NPM
+RUN apt-get --no-install-recommends install -y curl ca-certificates apt-transport-https lsb-release 
+RUN curl -sSL https://deb.nodesource.com/setup_8.x | bash - 
+RUN apt-get --no-install-recommends install -y nodejs 
+
+ADD project/assets/package.json /package.json
+ADD project/assets/webpack.config.js /app/webpack.config.js
+
+# Install global NPM packages
+RUN npm install
+RUN npm install -g webpack@4.4.0
+RUN npm i -D extract-text-webpack-plugin@next
+RUN npm install -g clean-webpack-plugin@0.1.19
+RUN npm install -g browserslist@4.0.2
+RUN npm install -g webpack-command
+RUN npm i html-webpack-plugin html-loader --save-dev
+
+# Cleanup after installation
+RUN npm cache verify 
+RUN rm -rf /tmp/npm-* 
+RUN apt-get clean -y 
+RUN apt-get autoclean -y 
+RUN apt-get autoremove -y 
+RUN rm -fr /var/lib/apt/lists/* 
+
+# Create basic project structure
+RUN mkdir -p /app/project/assets/
+
+#ADD project/assets/package.json /app/package.json
+
+RUN cd /app 
+RUN npm install 
+RUN npm cache verify
+
+WORKDIR /app/project/assets/
+
+EXPOSE 9000

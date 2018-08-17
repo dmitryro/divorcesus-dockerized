@@ -1,5 +1,22 @@
 version: "3"
 services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: '{{ project_name }}'
+      POSTGRES_PASSWORD: '{{ secret_key|slugify }}'
+
+  cache:
+    image: redis
+
+  assets:
+    build:
+      dockerfile: docker/development/Dockerfile.assets
+      context: .
+    volumes:
+      - ./project/assets:/app/project/assets/
+    command: npm run watch
+
   master:
     build:
       context: ./salt/master
@@ -7,7 +24,6 @@ services:
     ports:
       - 0.0.0.0:4505:4505
       - 0.0.0.0:4506:4506
-      - 0.0.0.0:8000:8000
     restart: always
     hostname: salt
     privileged: true
@@ -30,8 +46,8 @@ services:
      environment:
          SALT_ROLE: minion
          SALT_GRAINS: "{'component': 'mgr'}"
-     links: 
-         - master
+     links:
+         - master:1
 
   minion2-dev:
      build:
@@ -54,7 +70,7 @@ services:
      environment:
          SALT_ROLE: minion
          SALT_GRAINS: "{'component': 'mgr'}"
-     links: 
+     links:
          - master
 
   minion2-sta:
@@ -66,6 +82,5 @@ services:
      environment:
          SALT_ROLE: minion
          SALT_GRAINS: "{'component': 'worker'}"
-     links: 
+     links:
          - master
-
