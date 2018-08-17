@@ -1,6 +1,6 @@
 #!/bin/bash
 ROLE=master
-REPO=jackytung
+REPO=divorces
 TAG=2017.7.2
 while true; do
     read -p "Which salt image would you like to build? [master/minion] " choice
@@ -13,4 +13,4 @@ while true; do
         esac
 done
 
-docker build -f Dockerfile.$ROLE -t $REPO/$CONTAINER:$TAG .
+docker build -f ./salt/$ROLE/Dockerfile -t $REPO/$CONTAINER:$TAG .

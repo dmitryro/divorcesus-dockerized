@@ -1,0 +1,71 @@
+version: "3"
+services:
+  master:
+    build:
+      context: ./salt/master
+      dockerfile: Dockerfile
+    ports:
+      - 0.0.0.0:4505:4505
+      - 0.0.0.0:4506:4506
+      - 0.0.0.0:8000:8000
+    restart: always
+    hostname: salt
+    privileged: true
+    environment:
+        SALT_ROLE: master
+    expose:
+        - "4505"
+        - "4506"
+    volumes:
+        - ./srv:/srv:rw
+        - ./salt/salt:/srv/salt
+        - ./salt/pillar:/srv/pillar
+
+  minion1-dev:
+     build:
+       context: ./salt/minion
+       dockerfile: Dockerfile
+     container_name: project-mgr-dev
+     hostname: project-mgr-dev
+     environment:
+         SALT_ROLE: minion
+         SALT_GRAINS: "{'component': 'mgr'}"
+     links: 
+         - master
+
+  minion2-dev:
+     build:
+       context: ./salt/minion
+       dockerfile: Dockerfile
+     container_name: project-worker-dev
+     hostname: project-worker-dev
+     environment:
+         SALT_ROLE: minion
+         SALT_GRAINS: "{'component': 'worker'}"
+     links:
+         - master
+
+  minion1-sta:
+     build:
+         context: ./salt/minion
+         dockerfile: Dockerfile
+     container_name: project-mgr-sta
+     hostname: project-mgr-sta
+     environment:
+         SALT_ROLE: minion
+         SALT_GRAINS: "{'component': 'mgr'}"
+     links: 
+         - master
+
+  minion2-sta:
+     build:
+         context: ./salt/minion
+         dockerfile: Dockerfile
+     container_name: project-worker-sta
+     hostname: project-worker-sta
+     environment:
+         SALT_ROLE: minion
+         SALT_GRAINS: "{'component': 'worker'}"
+     links: 
+         - master
+
